@@ -1,5 +1,6 @@
 import { CloudRain, Drop, MapPin, Wind } from "phosphor-react";
 import React, { useEffect, useState } from "react";
+import { api } from "../../libs/api";
 import {
   HomeContainer,
   LocationWithCity,
@@ -10,10 +11,33 @@ import {
 } from "./styles";
 
 function Home() {
-  const [positions, setPosition] = useState([]);
+  const [positions, setPositions] = useState({});
+  const [currentWeather, setCurrentWeather] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  async function getWeateher(p) {
+    const { latitude, longitude } = p;
+
+    await api
+      .get("weather?", {
+        params: {
+          lat: latitude,
+          lon: longitude,
+          appid: "2259706cd472181ce8f32891fa4976c5",
+          units: "metric",
+        },
+      })
+      .then((response) => {
+        setCurrentWeather(response.data);
+        setLoading(false);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        alert(error);
+      });
+  }
   function getPosition() {
     const successCallback = (position) => {
-      // console.log(position.coords);
       setPositions(position.coords);
     };
 
@@ -33,42 +57,61 @@ function Home() {
 
   useEffect(() => {
     getPosition();
-    console.log(positions);
   }, []);
+  useEffect(() => {
+    //verificar positions
+    console.log(positions.latitude);
+
+    if (
+      typeof positions.latitude != "undefined" &&
+      typeof positions.longitude != "undefined"
+    ) {
+      getWeateher(positions);
+    }
+
+    // getWeateher(positions);
+  }, [positions]);
   return (
     <HomeContainer>
-      <TemperatureNow>
-        <LocationWithCity>
-          <MapPin size={14} /> Rio do Sul , SC
-        </LocationWithCity>
-        <Temperature>
-          <h1>18º</h1>
-          <span>22° 16°</span>
-        </Temperature>
-        <Statistics>
-          <StatisticCard>
-            <Wind size={32} weight="fill" />
-            <div>
-              <p>Vento</p>
-              17 Km/h
-            </div>
-          </StatisticCard>
-          <StatisticCard>
-            <Drop size={32} weight="fill" />
-            <div>
-              <p>Umidade</p>
-              31%
-            </div>
-          </StatisticCard>
-          <StatisticCard>
-            <CloudRain size={32} weight="fill" />{" "}
-            <div>
-              <p>Chuva</p>
-              10%
-            </div>
-          </StatisticCard>
-        </Statistics>
-      </TemperatureNow>
+      {loading ? (
+        <TemperatureNow>carregando...</TemperatureNow>
+      ) : (
+        <TemperatureNow>
+          <LocationWithCity>
+            <MapPin size={14} /> {currentWeather.name}
+          </LocationWithCity>
+          <Temperature>
+            <h1>{Math.ceil(currentWeather.main.temp)}º</h1>
+            <span>
+              {Math.ceil(currentWeather.main.temp_min)}°{" "}
+              {Math.ceil(currentWeather.main.temp_max)}°
+            </span>
+          </Temperature>
+          <Statistics>
+            <StatisticCard>
+              <Wind size={32} weight="fill" />
+              <div>
+                <p>Vento</p>
+                {currentWeather.wind.speed}
+              </div>
+            </StatisticCard>
+            <StatisticCard>
+              <Drop size={32} weight="fill" />
+              <div>
+                <p>Umidade</p>
+                {currentWeather.main.humidity}%
+              </div>
+            </StatisticCard>
+            <StatisticCard>
+              <CloudRain size={32} weight="fill" />{" "}
+              <div>
+                <p>Chuva</p>
+                10%
+              </div>
+            </StatisticCard>
+          </Statistics>
+        </TemperatureNow>
+      )}
     </HomeContainer>
   );
 }
