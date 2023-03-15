@@ -80,6 +80,11 @@ function Home() {
           <LocationWithCity>
             <MapPin size={14} /> {currentWeather.name}
           </LocationWithCity>
+
+          <img
+            src={`https://openweathermap.org/img/wn/${currentWeather.weather[0].icon}@2x.png`}
+            alt=""
+          />
           <Temperature>
             <h1>{Math.ceil(currentWeather.main.temp)}º</h1>
             <span>
